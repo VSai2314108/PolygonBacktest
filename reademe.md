@@ -20,3 +20,4 @@ Find the days for which each ticker in the universe is tradeable by your criteri
 ### Strategy
 Evaluate the strategies you use on the outputs of scanner
 Save each trade as a chart file or simply as a set of trades
+Day trading algorithms should set the date as 9:30 of the day while swing trading should have the date with no time 

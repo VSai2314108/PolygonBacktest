@@ -29,10 +29,11 @@ class PolygonClient:
         timestamp_day = initial_timestamp
         return self.client.get_aggs(symbol, 1, "day", timestamp_history, timestamp_day)
     
-    def get_stock_data(self, symbol, start_date, end_date):
+    def get_stock_data(self, symbol, start_date, end_date, tf = (1,"day")):
         """
         Daily bars for analysis
+        tf = (1, "day")
         """
-        return self.client.get_aggs(symbol, 1, "day", start_date, end_date)
+        return self.client.get_aggs(symbol, tf[0], tf[1], start_date, end_date)
     
     

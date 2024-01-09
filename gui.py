@@ -10,7 +10,7 @@ import os
 from functions.PolygonClient import PolygonClient
 from functions.Charting import Charts
 
-from datetime import datetime     
+from datetime import datetime, timedelta     
 class StockApp(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -62,6 +62,12 @@ class StockApp(QMainWindow):
 
         # Set the window size
         self.resizeEvent = self.on_resize
+        
+        # map of strategy chart offsets
+        self.offsets = {
+            'GapAndGo': (timedelta(days=50), timedelta(days=50), (1, 'day')),
+            'WashoutLong': (timedelta(minutes=300), timedelta(minutes=240), (1, 'minute'))
+        }
 
     def upload_csv(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "Open CSV", "", "CSV Files (*.csv)")
@@ -94,17 +100,26 @@ class StockApp(QMainWindow):
         if self.df is not None and not self.df.empty:
             row = self.df.iloc[self.current_index]
             symbol, date, entry, stop, target, success = row
-            targets = [float(elem) for elem in target.split(' ')]
+            if type(target) == str:
+                targets = [float(elem) for elem in target.split(' ')]
+            else:
+                targets = [target]
             # Convert date to datetime and extract just the date and convert it back to string
-            date = datetime.strptime(date, '%Y-%m-%d %H:%M:%S').date().strftime('%Y-%m-%d')
+            date = datetime.strptime(date, '%Y-%m-%d %H:%M:%S')
             self.info_label.setText(f"Symbol: {symbol}, Date: {date}, R: {success}")
 
             plt.close('all')
             
             hlines = [[entry, stop] + targets, ['b', 'r'] + ['g'] * len(targets)]
             
+            vlines = [[date], ['b']]
+            
+            # read in the strategy from the environment variable
+            strategy = os.environ.get('strategy')
+            backoff, forwardoff, tf = self.offsets[strategy]
+            
             # Fetch stock data and plot
-            fig, _ = self.charts.plot_ohlc_chart_min(symbol, date, 'M', False, hlines=hlines)
+            fig, _ = self.charts.plot(symbol, date, tf, hlines=hlines, vlines=vlines, backoff=backoff, forwardoff=forwardoff)
 
             # Get the size of the canvas in pixels
             width, height = self.canvas.get_width_height(physical=True)
@@ -134,6 +149,9 @@ class StockApp(QMainWindow):
             self.display_stock()
 
 if __name__ == "__main__":
+    strategy = input("Enter strategy: ")
+    os.environ['strategy'] = strategy
+    
     app = QApplication(sys.argv)
     mainWin = StockApp()
     mainWin.show()

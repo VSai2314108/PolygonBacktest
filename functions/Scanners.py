@@ -13,6 +13,8 @@ class Scanners:
         # change this to a switch statement to initiate different scanners
         if scanner == "gap_trading":
             self.scanner = self.gap_trading_scanner
+        elif scanner == "swing_trading":
+            self.scanner = self.swing_trading_scanner
         self.tickers = universe.get_tickers()
         
     def gap_trading_scanner(self, symbol, stock_data: List[Agg]) -> List[tuple]:
@@ -50,9 +52,35 @@ class Scanners:
                     out = out + [(symbol, date)]
         return out
     
+    def swing_trading_scanner(self, symbol, stock_data: List[Agg]) -> List[tuple]:
+        out = []
+        
+        # fundamentals
+        details = self.client.get_fundamentals(symbol)
+        mkt_cap_big = details.market_cap > 2000000000
+        
+        for i in range(20, len(stock_data)):
+            avg_volume = sum([day.volume for day in stock_data[i-20:i]]) / 20
+            adr_p = sum([abs(day.high - day.low) / day.close for day in stock_data[i-20:i]]) / 20
+            
+            # technicals
+            high_avg_volume = avg_volume > 1000000
+            previous_day = stock_data[i-1]
+            current_day = stock_data[i]
+            gap_up = current_day.open > (previous_day.close * 1+(max(0.02, adr_p)))
+            outside_range = current_day.open > previous_day.high
+            not_small = current_day.open >= 5
+            high_dollar_volume = (avg_volume * current_day.close) > 100000000
+            adr_p_over = adr_p > 0.03
+            
+            if gap_up and outside_range and not_small and high_dollar_volume and high_avg_volume and adr_p_over and mkt_cap_big:
+                date = datetime.fromtimestamp(current_day.timestamp / 1000).strftime('%Y-%m-%d')
+                out = out + [(symbol, date)]
+        return out
+    
     def run_scanner(self, start_date, end_date):
         # format of out is alwyas [(symbol, date)...]
-        out: List[tuple] = []
+        out: List = []
         for ticker in self.tickers:
             try:
                 data = self.client.get_stock_data(ticker, start_date, end_date)
