@@ -9,7 +9,8 @@ from numpy import NaN, poly
 from polygon.rest import RESTClient
 from polygon.rest.models import Agg
 from typing import List
-from .PolygonClient import PolygonClient
+
+from clients.polygon import PolygonClient
 import numpy as np
 
 class Charts:
@@ -74,7 +75,7 @@ class Charts:
             data.drop(['typical_price', 'tp_volume', 'cumulative_tp_volume', 'cumulative_volume'], axis=1, inplace=True)
             
             # add pre 9:30 boolean
-            data['Pre930'] = [True if minute.time() < time(9, 30) else False for minute in data.index]
+            data['Pre930'] = [True if minute.time() < time(9, 30) else False for minute in data['Date']]
 
         # Calculate SMAs
         data['SMA_9'] = data['Close'].rolling(window=9).mean()
@@ -86,7 +87,9 @@ class Charts:
         
         # create a column call data['vline'] and set the dates included in vlines to true and the rest to false
         if vlines != None:
-            vline = [True if minute in vlines[0] else False for minute in data.index]
+            for elem in data['Date']:
+                print(elem)
+            vline = [True if minute in vlines[0] else False for minute in data['Date']]
             # create a pd series with close price if true if not 0
             data['vline'] = [data['Low'][i] if vline[i] else min(data['Close']) for i in range(len(vline))]
 

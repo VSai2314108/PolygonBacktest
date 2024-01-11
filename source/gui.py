@@ -7,8 +7,8 @@ import matplotlib.pyplot as plt
 import mplfinance as mpf
 import os
 
-from functions.PolygonClient import PolygonClient
-from functions.Charting import Charts
+from clients.polygon import PolygonClient
+from graphics.charting import Charts
 
 from datetime import datetime, timedelta     
 class StockApp(QMainWindow):
@@ -17,7 +17,7 @@ class StockApp(QMainWindow):
 
         self.current_index = 0
         self.df = None
-        self.charts = Charts(PolygonClient(os.environ.get('POLYGON_API_KEY')))
+        self.charts = Charts(PolygonClient())
 
         # Main Widget
         self.main_widget = QWidget(self)
@@ -65,7 +65,7 @@ class StockApp(QMainWindow):
         
         # map of strategy chart offsets
         self.offsets = {
-            'GapAndGo': (timedelta(days=50), timedelta(days=50), (1, 'day')),
+            'gapandgo': (timedelta(days=50), timedelta(days=50), (1, 'day')),
             'washout': (timedelta(minutes=300), timedelta(minutes=240), (1, 'minute'))
         }
 
@@ -127,7 +127,7 @@ class StockApp(QMainWindow):
             
             # convert the timestamps of the trades to dates
             trades = [trade[0] for trade in trades]
-            vlines = [[trades], ['black']]
+            vlines = [trades, ['black']]
             
             # read in the strategy from the environment variable
             strategy = os.environ.get('strategy')

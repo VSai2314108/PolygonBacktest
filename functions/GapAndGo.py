@@ -14,17 +14,29 @@ class GapAndGo(Strategy):
         self.tickers: List[tuple] = scanner.run_scanner(date(2023, 1, 1), date(2023, 12, 31))
         self.trades: List[Trade] = []
     
-    def algorithim(self, symbol, data: List[Agg]):
+    def algorithim(self, symbol, date: datetime, data: List[Agg]):
         # using daily data starting 10 days before the gap
         
-        # ensure we closed above the high of the day before the gap
-        gap = data[10]
-        if gap.close < data[9].high:
+        # find the candle matching input date
+        gap_ind = None
+        for i in range(len(data)):
+            if datetime.fromtimestamp(data[i].timestamp / 1000).date() == date.date():
+                gap_ind = i
+                break
+        
+        # check not none
+        if gap_ind == None:
             return
+        
+        # check if gap is up and closed above previous days high
+        gap = data[gap_ind]
+        if not(gap.open > data[gap_ind-1].high and gap.close > data[gap_ind-1].high):
+            return
+            
         
         # look for the following sequence for the next five days - candle that has a lower high followed by a candle that breaks the lower high
         # the lower high candle must touch the 9 sma
-        for i in range(11, 16):
+        for i in range(gap_ind+2, gap_ind+7):
             sma9 = sum([day.close for day in data[i-10:i-1]]) / 9
             pullin = data[i-1].low < sma9
             lower_high = data[i-1].high < data[i-2].high
@@ -47,9 +59,9 @@ class GapAndGo(Strategy):
         for symbol, date in self.tickers:
             print(f'Running Gap And Go Swing on {symbol} with gap on {date}')
             # get the data
-            data = self.client.get_stock_data(symbol, datetime.strptime(date, '%Y-%m-%d') - timedelta(days=10), datetime.strptime(date, '%Y-%m-%d') + timedelta(days=100))
+            data = self.client.get_stock_data(symbol, datetime.strptime(date, '%Y-%m-%d') - timedelta(days=20), datetime.strptime(date, '%Y-%m-%d') + timedelta(days=100))
             try:
-                trade = self.algorithim(symbol, data)
+                trade = self.algorithim(symbol, datetime.strptime(date, '%Y-%m-%d'), data)
                 if trade:
                     self.trades.append(trade)
             except Exception as e:

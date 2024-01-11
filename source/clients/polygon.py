@@ -1,16 +1,18 @@
 from datetime import datetime, timedelta
-import os
 from polygon.rest import RESTClient
 from polygon.rest.models import Agg
+
 from typing import List
+import os
 
 class PolygonClient:
     
-    def __init__(self, api_key = None):
-        if api_key is None:
-            self.client: RESTClient = RESTClient(os.environ['POLYGON_API_KEY'])
+    def __init__(self, api_key):
         self.client: RESTClient = RESTClient(api_key)
-            
+        
+    def __init__(self):
+        self.client: RESTClient = RESTClient()
+        
     def get_fundamentals(self, symbol):
         return self.client.get_ticker_details(symbol)
         
@@ -19,10 +21,12 @@ class PolygonClient:
         Minute bars for chart
         """
         initial_timestamp = None
-        if type(date) == datetime:
-            initial_timestamp = date
-        else:
+        if type(date) == str:
             initial_timestamp = datetime.strptime(date, '%Y-%m-%d')
+        else:
+            initial_timestamp = date
+        # set timestamp time to 00:00
+        initial_timestamp = initial_timestamp.replace(hour=0, minute=0, second=0, microsecond=0)
         timestamp_930_am = initial_timestamp + timedelta(hours=4, minutes=30)
         timestamp_2_hours_later = timestamp_930_am + timedelta(hours=8)
         return self.client.get_aggs(symbol, 1, "minute", timestamp_930_am, timestamp_2_hours_later)
