@@ -3,7 +3,8 @@ from polygon.rest import RESTClient
 from polygon.rest.models import Agg
 
 from typing import List
-import os
+import pandas as pd
+from datetime import datetime, timedelta
 
 class PolygonClient:
     
@@ -46,5 +47,22 @@ class PolygonClient:
         tf = (1, "day")
         """
         return self.client.get_aggs(symbol, tf[0], tf[1], start_date, end_date)
+    
+    def convert_aggs(self, data: List[Agg]):
+        """
+        Converts a list of Agg objects to a dataframe
+        """
+        
+        # Columns: time | open | high | low | close | volume 
+        df: pd.DataFrame = pd.DataFrame({}, columns=['time', 'open', 'high', 'low', 'close', 'volume'])
+        for agg in data:
+            row = {'time': datetime.fromtimestamp(agg.timestamp/1000), 
+                'open': agg.open, 
+                'high': agg.high, 
+                'low': agg.low, 
+                'close': agg.close, 
+                'volume': agg.volume}
+            df.loc[len(df)] = row
+        return df
     
     

@@ -9,17 +9,21 @@ from universe.universe import Universe
 from objs.trades import Trade
 
 from .entries.washout import WashoutLong
+from .entries.gapswings import GapAndGo
 from .exits.target import Target
+from .exits.Sma9 import Sma9
 
 class algorithim():
     polygon = PolygonClient()
     
     entry = {
-        "washout": (WashoutLong(), (1, "min"))
+        "washout": (WashoutLong(), (1, "min")),
+        "gapandgo": (GapAndGo(), (1, "day"))
     }
     
     exit = {
-        "target": Target()
+        "target": Target(),
+        "sma9": Sma9()
     }
     
     

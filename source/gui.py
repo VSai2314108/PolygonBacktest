@@ -70,7 +70,7 @@ class StockApp(QMainWindow):
         }
 
     def upload_csv(self):
-        file_path = "/Users/vsai23/Workspace/PolygonBacktest/source/results/washout/target_2023-01-01_2023-06-30.csv"
+        file_path = "/Users/vsai23/Workspace/PolygonBacktest/source/results/gapandgo/sma9_2023-01-01_2023-06-30.csv"
         # file_path, _ = QFileDialog.getOpenFileName(self, "Open CSV", "", "CSV Files (*.csv)")
         if file_path:
             # parse the second to parent folder name as the strategy
